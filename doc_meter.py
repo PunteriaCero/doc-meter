@@ -17,7 +17,28 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
 
-DOC_EXTENSIONS = {".md", ".rst", ".adoc", ".txt", ".asciidoc", ".wiki", ".tex"}
+DOC_EXTENSIONS = {
+    # Markdown y variantes
+    ".md", ".mdx", ".markdown",
+    # reStructuredText
+    ".rst",
+    # AsciiDoc
+    ".adoc", ".asciidoc", ".asc",
+    # Texto plano
+    ".txt",
+    # LaTeX
+    ".tex",
+    # Wiki
+    ".wiki",
+    # PlantUML / diagramas como código
+    ".puml", ".plantuml",
+    # Org-mode (Emacs)
+    ".org",
+    # Jupyter Notebooks
+    ".ipynb",
+    # Quarto
+    ".qmd",
+}
 
 
 def run_git(args: list[str], repo_path: str) -> str:

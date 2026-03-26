@@ -39,7 +39,7 @@ python doc_meter.py /ruta/al/repo --no-plot
 | Argumento | Descripción | Default |
 |---|---|---|
 | `repo` | Ruta al repositorio Git | (requerido) |
-| `--extensions` | Extensiones a considerar como documentación | `.adoc .asciidoc .md .rst .tex .txt .wiki` |
+| `--extensions` | Extensiones a considerar como documentación | `.adoc .asc .asciidoc .ipynb .markdown .md .mdx .org .plantuml .puml .qmd .rst .tex .txt .wiki` |
 | `--interval` | Agrupación temporal: `day`, `week`, `month` | `week` |
 | `--branch` | Branch a analizar | branch actual |
 | `--output`, `-o` | Ruta para guardar la gráfica como imagen | (interactiva) |
