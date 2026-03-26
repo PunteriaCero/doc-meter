@@ -1,2 +1,5 @@
 .venv/
-*.png
+__pycache__/
+*.pyc  
+*.pyo
+*.pyd

@@ -1,8 +1,6 @@
 # doc-meter
 
-Mide el crecimiento de documentación en un repositorio Git a lo largo del tiempo.
-
-Itera sobre los commits, filtra archivos de documentación por extensión, acumula líneas netas y genera una gráfica de crecimiento.
+Mide el crecimiento de documentación en un repositorio Git a lo largo del tiempo. Itera sobre los commits, filtra archivos de documentación por extensión, acumula líneas netas y genera una gráfica de crecimiento — incluyendo comentarios en código fuente como indicador de documentación técnica.
 
 ## Instalación
 
@@ -10,28 +8,22 @@ Itera sobre los commits, filtra archivos de documentación por extensión, acumu
 pip install -r requirements.txt
 ```
 
-Requisitos: Python 3.10+ y Git instalado en el PATH.
+Requisitos: Python 3.10+ y Git en el PATH.
 
 ## Uso
 
 ```bash
-# Análisis básico (agrupa por semana, gráfica interactiva)
+# Análisis básico — agrupa por semana, gráfica interactiva
 python doc_meter.py /ruta/al/repo
 
 # Guardar gráfica como imagen
-python doc_meter.py /ruta/al/repo --output docs_growth.png
+python doc_meter.py /ruta/al/repo --output salida.png
 
-# Agrupar por mes
-python doc_meter.py /ruta/al/repo --interval month
+# Agrupar por mes, solo branch main
+python doc_meter.py /ruta/al/repo --interval month --branch main
 
-# Filtrar solo .md y .rst
-python doc_meter.py /ruta/al/repo --extensions .md .rst
-
-# Analizar un branch específico
-python doc_meter.py /ruta/al/repo --branch main
-
-# Solo resumen en consola, sin gráfica
-python doc_meter.py /ruta/al/repo --no-plot
+# Solo resumen en consola (sin gráfica ni análisis de comentarios)
+python doc_meter.py /ruta/al/repo --no-plot --no-comments
 ```
 
 ## Opciones
@@ -39,17 +31,28 @@ python doc_meter.py /ruta/al/repo --no-plot
 | Argumento | Descripción | Default |
 |---|---|---|
 | `repo` | Ruta al repositorio Git | (requerido) |
-| `--extensions` | Extensiones a considerar como documentación | `.adoc .asc .asciidoc .ipynb .markdown .md .mdx .org .plantuml .puml .qmd .rst .tex .txt .wiki` |
 | `--interval` | Agrupación temporal: `day`, `week`, `month` | `week` |
 | `--branch` | Branch a analizar | branch actual |
-| `--output`, `-o` | Ruta para guardar la gráfica como imagen | (interactiva) |
-| `--no-plot` | Solo mostrar resumen en consola | `false` |
+| `--output`, `-o` | Ruta para guardar la gráfica | (interactiva) |
+| `--extensions` | Extensiones de documentación | ver lista abajo |
+| `--no-plot` | Solo resumen en consola, sin gráfica | — |
+| `--no-comments` | Omitir análisis de comentarios en código fuente | — |
+
+**Extensiones de documentación detectadas por defecto:**
+`.adoc` `.asc` `.asciidoc` `.ipynb` `.markdown` `.md` `.mdx` `.org` `.plantuml` `.puml` `.qmd` `.rst` `.tex` `.txt` `.wiki`
+
+**Lenguajes analizados para comentarios:**
+Python, JavaScript/TypeScript, C#, Java, C/C++, Go, Rust, Kotlin, Swift, Scala, Dart, Ruby, Shell, SQL, Lua, HTML, CSS/SCSS y más.
 
 ## Salida
 
-El script genera:
+Consola: commits procesados, período, líneas añadidas/eliminadas/netas y total acumulado de comentarios en código.
 
-- **Resumen en consola** con total de commits, líneas añadidas/eliminadas y líneas netas.
-- **Gráfica de dos paneles**:
-  - Superior: crecimiento acumulado de líneas de documentación.
-  - Inferior: cambio neto por período (verde = crecimiento, rojo = reducción).
+Gráfica de dos paneles:
+
+- **Superior:** crecimiento acumulado, una línea por extensión de documentación + línea total (negra gruesa) + línea de comentarios en código fuente (naranja punteada).
+- **Inferior:** cambio neto por período (verde = crecimiento, rojo = reducción).
+
+## Ejemplo
+
+![Ejemplo de gráfica de crecimiento de documentación](reclamos_backend_docs.png)
