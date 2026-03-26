@@ -24,6 +24,12 @@ python doc_meter.py /ruta/al/repo --interval month --branch main
 
 # Solo resumen en consola (sin gráfica ni análisis de comentarios)
 python doc_meter.py /ruta/al/repo --no-plot --no-comments
+
+# Exportar datos a CSV
+python doc_meter.py /ruta/al/repo --output-csv datos.csv
+
+# Gráfica y CSV al mismo tiempo
+python doc_meter.py /ruta/al/repo --output salida.png --output-csv datos.csv
 ```
 
 ## Opciones
@@ -34,6 +40,7 @@ python doc_meter.py /ruta/al/repo --no-plot --no-comments
 | `--interval` | Agrupación temporal: `day`, `week`, `month` | `week` |
 | `--branch` | Branch a analizar | branch actual |
 | `--output`, `-o` | Ruta para guardar la gráfica | (interactiva) |
+| `--output-csv` | Ruta para exportar los datos como CSV | — |
 | `--extensions` | Extensiones de documentación | ver lista abajo |
 | `--no-plot` | Solo resumen en consola, sin gráfica | — |
 | `--no-comments` | Omitir análisis de comentarios en código fuente | — |
@@ -52,6 +59,8 @@ Gráfica de dos paneles:
 
 - **Superior:** crecimiento acumulado, una línea por extensión de documentación + línea total (negra gruesa) + línea de comentarios en código fuente (naranja punteada).
 - **Inferior:** cambio neto por período (verde = crecimiento, rojo = reducción).
+
+CSV (con `--output-csv`): una fila por período con las columnas `date`, `total_docs`, `net_docs`, una columna por cada extensión detectada y `comments_src` si se analizaron comentarios.
 
 ## Ejemplo
 

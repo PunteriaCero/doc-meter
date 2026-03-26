@@ -7,6 +7,8 @@ por extensión, acumula líneas netas y genera una gráfica de crecimiento.
 """
 
 import argparse
+import bisect
+import csv
 import re
 import subprocess
 import sys
@@ -377,6 +379,56 @@ def print_summary(data: dict, commits: list[dict]):
     print(f"{'='*60}\n")
 
 
+def export_csv(
+    path: str,
+    data: dict,
+    comment_dates: list | None,
+    comment_series: list | None,
+):
+    """
+    Exporta los datos de la gráfica a un archivo CSV.
+
+    Columnas: date, total_docs, net_docs, <ext1>, <ext2>, ..., comments_src
+
+    Para comments_src se aplica un join "as-of": cada fila recibe el último
+    valor acumulado de comentarios cuya fecha sea ≤ a la fecha de esa fila.
+    """
+    by_ext = data["by_ext"]
+    exts = sorted(by_ext.keys())
+
+    # Construir serie de comentarios ordenada para búsqueda as-of
+    c_dates_sorted: list[datetime] = []
+    c_vals_sorted: list[int] = []
+    if comment_dates and comment_series:
+        pairs = sorted(zip(comment_dates, comment_series), key=lambda x: x[0])
+        c_dates_sorted = [p[0] for p in pairs]
+        c_vals_sorted  = [p[1] for p in pairs]
+
+    fieldnames = ["date", "total_docs", "net_docs"] + exts
+    if c_dates_sorted:
+        fieldnames.append("comments_src")
+
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for i, dt in enumerate(data["dates"]):
+            row: dict = {
+                "date": dt.strftime("%Y-%m-%d"),
+                "total_docs": data["total"][i],
+                "net_docs": data["net"][i],
+            }
+            for ext in exts:
+                row[ext] = by_ext[ext][i]
+            if c_dates_sorted:
+                # bisect_right devuelve el primer índice cuya fecha > dt;
+                # el anterior es el último valor acumulado ≤ dt.
+                idx = bisect.bisect_right(c_dates_sorted, dt) - 1
+                row["comments_src"] = c_vals_sorted[idx] if idx >= 0 else ""
+            writer.writerow(row)
+
+    print(f"CSV guardado en: {path}")
+
+
 def plot_growth(
     data: dict,
     output_path: str | None,
@@ -488,6 +540,12 @@ Ejemplos:
         action="store_true",
         help="No analizar comentarios en código fuente",
     )
+    parser.add_argument(
+        "--output-csv",
+        default=None,
+        metavar="PATH",
+        help="Ruta para exportar los datos de la gráfica como archivo CSV",
+    )
 
     args = parser.parse_args()
 
@@ -524,6 +582,9 @@ Ejemplos:
             print(f"  Comentarios acumulados (est.)      : {total_comments} líneas\n")
         else:
             print("  No se encontraron comentarios en código fuente.\n")
+
+    if args.output_csv:
+        export_csv(args.output_csv, data, comment_dates, comment_series)
 
     if not args.no_plot:
         plot_growth(data, args.output, args.interval, repo_name, comment_dates, comment_series)
