@@ -528,12 +528,7 @@ Ejemplos:
     parser.add_argument(
         "--output", "-o",
         default=None,
-        help="Ruta para guardar la gráfica como imagen (si no se indica, se muestra interactiva)",
-    )
-    parser.add_argument(
-        "--no-plot",
-        action="store_true",
-        help="Solo mostrar resumen en consola, sin gráfica",
+        help="Ruta para guardar la gráfica como imagen. Si se omite, no se genera gráfica.",
     )
     parser.add_argument(
         "--no-comments",
@@ -586,7 +581,7 @@ Ejemplos:
     if args.output_csv:
         export_csv(args.output_csv, data, comment_dates, comment_series)
 
-    if not args.no_plot:
+    if args.output:
         plot_growth(data, args.output, args.interval, repo_name, comment_dates, comment_series)
 
 

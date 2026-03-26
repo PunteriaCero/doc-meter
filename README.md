@@ -13,17 +13,17 @@ Requisitos: Python 3.10+ y Git en el PATH.
 ## Uso
 
 ```bash
-# Análisis básico — agrupa por semana, gráfica interactiva
+# Análisis básico — solo resumen en consola
 python doc_meter.py /ruta/al/repo
 
 # Guardar gráfica como imagen
 python doc_meter.py /ruta/al/repo --output salida.png
 
 # Agrupar por mes, solo branch main
-python doc_meter.py /ruta/al/repo --interval month --branch main
+python doc_meter.py /ruta/al/repo --interval month --branch main --output salida.png
 
-# Solo resumen en consola (sin gráfica ni análisis de comentarios)
-python doc_meter.py /ruta/al/repo --no-plot --no-comments
+# Solo resumen en consola (sin análisis de comentarios)
+python doc_meter.py /ruta/al/repo --no-comments
 
 # Exportar datos a CSV
 python doc_meter.py /ruta/al/repo --output-csv datos.csv
@@ -39,10 +39,9 @@ python doc_meter.py /ruta/al/repo --output salida.png --output-csv datos.csv
 | `repo` | Ruta al repositorio Git | (requerido) |
 | `--interval` | Agrupación temporal: `day`, `week`, `month` | `week` |
 | `--branch` | Branch a analizar | branch actual |
-| `--output`, `-o` | Ruta para guardar la gráfica | (interactiva) |
+| `--output`, `-o` | Ruta para guardar la gráfica. Si se omite, no se genera gráfica. | — |
 | `--output-csv` | Ruta para exportar los datos como CSV | — |
 | `--extensions` | Extensiones de documentación | ver lista abajo |
-| `--no-plot` | Solo resumen en consola, sin gráfica | — |
 | `--no-comments` | Omitir análisis de comentarios en código fuente | — |
 
 **Extensiones de documentación detectadas por defecto:**
