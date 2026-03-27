@@ -1,5 +1,7 @@
 # doc-meter
 
+[![doc-meter](https://github.com/PunteriaCero/doc-meter/actions/workflows/doc-meter.yml/badge.svg)](https://github.com/PunteriaCero/doc-meter/actions/workflows/doc-meter.yml)
+
 Mide el crecimiento de documentación en un repositorio Git a lo largo del tiempo. Itera sobre los commits, filtra archivos de documentación por extensión, acumula líneas netas y genera una gráfica de crecimiento — incluyendo comentarios en código fuente como indicador de documentación técnica.
 
 ## Instalación
@@ -72,3 +74,24 @@ CSV (con `--output-csv`): una fila por período con las columnas `date`, `total_
 ## Ejemplo
 
 ![Ejemplo de gráfica de crecimiento de documentación](reclamos_backend_docs.png)
+
+## CI / GitHub Pages
+
+El repositorio incluye un workflow de GitHub Actions (`.github/workflows/doc-meter.yml`) que se ejecuta automáticamente en cada push a `main`:
+
+1. Clona el repositorio con historial completo (`fetch-depth: 0`).
+2. Instala las dependencias.
+3. Ejecuta `doc_meter.py` sobre el propio repo con agrupación mensual y genera `docs_growth.png` + `docs_growth.csv`.
+4. Construye una página `index.html` que embebe la gráfica y muestra los datos en tabla.
+5. Publica todo en **GitHub Pages** usando el entorno oficial `github-pages`.
+
+El resultado queda disponible en:
+
+```
+https://<owner>.github.io/doc-meter/
+```
+
+Para activarlo, habilita GitHub Pages en la configuración del repositorio eligiendo la fuente **GitHub Actions** (`Settings → Pages → Source → GitHub Actions`).
+
+> Ajusta `--begin YYYY-MM-DD` en el paso `Run doc-meter` del workflow si quieres restringir el período analizado.
+

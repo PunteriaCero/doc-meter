@@ -1,0 +1,110 @@
+name: doc-meter
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # necesario para que git log recorra todo el historial
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run doc-meter
+        run: |
+          mkdir -p _site
+          python doc_meter.py . \
+            --interval month \
+            --output _site/docs_growth.png \
+            --output-csv _site/docs_growth.csv
+          # Añadir --begin YYYY-MM-DD si se quiere restringir el período analizado
+
+      - name: Generate index.html
+        run: |
+          python - <<'EOF'
+          import csv, html
+          from pathlib import Path
+
+          rows = list(csv.DictReader(open("_site/docs_growth.csv")))
+
+          if rows:
+              keys = list(rows[0].keys())
+              thead = "<tr>" + "".join(f"<th>{html.escape(k)}</th>" for k in keys) + "</tr>"
+              tbody = "\n".join(
+                  "<tr>" + "".join(f"<td>{html.escape(v)}</td>" for v in row.values()) + "</tr>"
+                  for row in rows
+              )
+          else:
+              thead = tbody = ""
+
+          Path("_site/index.html").write_text(f"""<!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>doc-meter — crecimiento de documentación</title>
+            <style>
+              body {{ font-family: system-ui, sans-serif; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; color: #222; }}
+              h1 {{ font-size: 1.5rem; margin-bottom: .25rem; }}
+              p.subtitle {{ color: #555; margin-top: 0; }}
+              img {{ max-width: 100%; border: 1px solid #ddd; border-radius: 6px; margin: 1rem 0; }}
+              a.download {{ display: inline-block; margin-bottom: 1.5rem; font-size: .9rem; }}
+              table {{ border-collapse: collapse; width: 100%; font-size: .82rem; }}
+              th, td {{ border: 1px solid #ddd; padding: .35rem .65rem; text-align: right; white-space: nowrap; }}
+              th {{ background: #f5f5f5; text-align: center; font-weight: 600; }}
+              td:first-child {{ text-align: left; }}
+              tr:nth-child(even) {{ background: #fafafa; }}
+            </style>
+          </head>
+          <body>
+            <h1>doc-meter</h1>
+            <p class="subtitle">Crecimiento de documentación — generado automáticamente en cada push a <code>main</code></p>
+            <img src="docs_growth.png" alt="Gráfica de crecimiento de documentación">
+            <br>
+            <a class="download" href="docs_growth.csv" download>&#11015; Descargar datos (CSV)</a>
+            <table>
+              <thead>{thead}</thead>
+              <tbody>{tbody}</tbody>
+            </table>
+          </body>
+          </html>""", encoding="utf-8")
+          print("index.html generado OK")
+          EOF
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
