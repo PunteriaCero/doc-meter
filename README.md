@@ -88,10 +88,7 @@ El repositorio incluye un workflow de GitHub Actions (`.github/workflows/doc-met
 El resultado queda disponible en:
 
 ```
-https://<owner>.github.io/doc-meter/
+https://PunteriaCero.github.io/doc-meter/
 ```
 
-Para activarlo, habilita GitHub Pages en la configuración del repositorio eligiendo la fuente **GitHub Actions** (`Settings → Pages → Source → GitHub Actions`).
-
-> Ajusta `--begin YYYY-MM-DD` en el paso `Run doc-meter` del workflow si quieres restringir el período analizado.
 
