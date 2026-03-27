@@ -30,6 +30,12 @@ python doc_meter.py /ruta/al/repo --output-csv datos.csv
 
 # Gráfica y CSV al mismo tiempo
 python doc_meter.py /ruta/al/repo --output salida.png --output-csv datos.csv
+
+# Limitar a un rango de fechas
+python doc_meter.py /ruta/al/repo --begin 2024-01-01 --end 2024-12-31 --output salida.png
+
+# Solo desde una fecha (hasta hoy)
+python doc_meter.py /ruta/al/repo --begin 2023-06-01 --output-csv datos.csv
 ```
 
 ## Opciones
@@ -41,6 +47,8 @@ python doc_meter.py /ruta/al/repo --output salida.png --output-csv datos.csv
 | `--branch` | Branch a analizar | branch actual |
 | `--output`, `-o` | Ruta para guardar la gráfica. Si se omite, no se genera gráfica. | — |
 | `--output-csv` | Ruta para exportar los datos como CSV | — |
+| `--begin` | Fecha de inicio del análisis (`YYYY-MM-DD`) | hace un año |
+| `--end` | Fecha de fin del análisis (`YYYY-MM-DD`) | hoy |
 | `--extensions` | Extensiones de documentación | ver lista abajo |
 | `--no-comments` | Omitir análisis de comentarios en código fuente | — |
 

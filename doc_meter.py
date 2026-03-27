@@ -13,7 +13,7 @@ import re
 import subprocess
 import sys
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from tqdm import tqdm
@@ -101,7 +101,13 @@ def run_git(args: list[str], repo_path: str) -> str:
     return result.stdout
 
 
-def parse_commits(repo_path: str, extensions: set[str], branch: str | None = None) -> list[dict]:
+def parse_commits(
+    repo_path: str,
+    extensions: set[str],
+    branch: str | None = None,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
+) -> list[dict]:
     """
     Obtiene todos los commits con --numstat y filtra por extensiones de documentación.
 
@@ -114,20 +120,28 @@ def parse_commits(repo_path: str, extensions: set[str], branch: str | None = Non
         "--pretty=format:###%H|%aI",  # separador con hash y fecha ISO
         "--no-merges",
     ]
+    if date_from:
+        git_args.append(f"--after={date_from.strftime('%Y-%m-%d')}")
+    if date_to:
+        git_args.append(f"--before={date_to.strftime('%Y-%m-%d')}")
     if branch:
         git_args.append(branch)
 
-    raw = run_git(git_args, repo_path)
-
-    lines = raw.splitlines()
-    total_commits = sum(1 for l in lines if l.strip().startswith("###"))
+    process = subprocess.Popen(
+        ["git"] + git_args,
+        cwd=repo_path,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        encoding="utf-8",
+        errors="replace",
+    )
 
     commits: list[dict] = []
     current: dict | None = None
 
-    with tqdm(total=total_commits, desc="  Commits (docs)", unit=" commit", ncols=80) as pbar:
-        for line in lines:
-            line = line.strip()
+    with tqdm(process.stdout, desc="  Commits (docs)", unit=" líneas", ncols=80, miniters=500) as pbar:
+        for raw_line in pbar:
+            line = raw_line.strip()
             if not line:
                 continue
 
@@ -135,7 +149,8 @@ def parse_commits(repo_path: str, extensions: set[str], branch: str | None = Non
                 # Guardar commit anterior si tiene datos de docs
                 if current and current["added"] + current["removed"] > 0:
                     commits.append(current)
-                pbar.update(1)
+                # Actualizar descripción con el conteo actual
+                pbar.set_postfix({"commits": len(commits)}, refresh=False)
 
                 parts = line[3:].split("|", 1)
                 commit_hash = parts[0]
@@ -175,6 +190,12 @@ def parse_commits(repo_path: str, extensions: set[str], branch: str | None = Non
                 current["by_ext"][ext]["added"] += int(added_str)
                 current["by_ext"][ext]["removed"] += int(removed_str)
 
+    process.wait()
+    if process.returncode != 0:
+        err = process.stderr.read()
+        print(f"Error ejecutando git log --numstat:\n{err}", file=sys.stderr)
+        sys.exit(1)
+
     # Último commit
     if current and current["added"] + current["removed"] > 0:
         commits.append(current)
@@ -188,6 +209,8 @@ def parse_source_comments(
     repo_path: str,
     comment_patterns: dict[str, str],
     branch: str | None = None,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
 ) -> list[dict]:
     """
     Recorre git log -p filtrando archivos de código fuente y cuenta
@@ -198,6 +221,10 @@ def parse_source_comments(
 
     pathspecs = [f"*{ext}" for ext in comment_patterns]
     git_args = ["log", "-p", "--pretty=format:###%H|%aI", "--no-merges"]
+    if date_from:
+        git_args.append(f"--after={date_from.strftime('%Y-%m-%d')}")
+    if date_to:
+        git_args.append(f"--before={date_to.strftime('%Y-%m-%d')}")
     if branch:
         git_args.append(branch)
     git_args += ["--"] + pathspecs
@@ -541,11 +568,32 @@ Ejemplos:
         metavar="PATH",
         help="Ruta para exportar los datos de la gráfica como archivo CSV",
     )
+    parser.add_argument(
+        "--begin",
+        default=None,
+        metavar="YYYY-MM-DD",
+        help="Fecha de inicio del análisis (default: hace un año)",
+    )
+    parser.add_argument(
+        "--end",
+        default=None,
+        metavar="YYYY-MM-DD",
+        help="Fecha de fin del análisis (default: hoy)",
+    )
 
     args = parser.parse_args()
 
     repo_path = str(Path(args.repo).resolve())
     extensions = set(args.extensions) if args.extensions else DOC_EXTENSIONS
+
+    # Rango de fechas
+    today = datetime.now()
+    try:
+        date_from = datetime.strptime(args.begin, "%Y-%m-%d") if args.begin else today - timedelta(days=365)
+        date_to   = datetime.strptime(args.end,   "%Y-%m-%d") if args.end   else today
+    except ValueError as e:
+        print(f"Error en formato de fecha (usar YYYY-MM-DD): {e}", file=sys.stderr)
+        sys.exit(1)
 
     # Validar que es un repo git
     run_git(["rev-parse", "--git-dir"], repo_path)
@@ -553,10 +601,11 @@ Ejemplos:
     repo_name = Path(repo_path).name
 
     print(f"Analizando repositorio: {repo_path}")
-    print(f"Extensiones docs: {', '.join(sorted(extensions))}")
-    print(f"Intervalo: {args.interval}")
+    print(f"Período             : {date_from.strftime('%Y-%m-%d')} → {date_to.strftime('%Y-%m-%d')}")
+    print(f"Extensiones docs    : {', '.join(sorted(extensions))}")
+    print(f"Intervalo           : {args.interval}")
 
-    commits = parse_commits(repo_path, extensions, args.branch)
+    commits = parse_commits(repo_path, extensions, args.branch, date_from, date_to)
 
     if not commits:
         print("\nNo se encontraron commits con cambios en archivos de documentación.")
@@ -569,7 +618,7 @@ Ejemplos:
     comment_dates, comment_series = None, None
     if not args.no_comments:
         print("Analizando comentarios en código fuente...")
-        comment_commits = parse_source_comments(repo_path, SOURCE_COMMENT_PATTERNS, args.branch)
+        comment_commits = parse_source_comments(repo_path, SOURCE_COMMENT_PATTERNS, args.branch, date_from, date_to)
         if comment_commits:
             comment_dates, comment_series = aggregate_comments_by_interval(comment_commits, args.interval)
             total_comments = comment_series[-1] if comment_series else 0
