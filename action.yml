@@ -1,7 +1,6 @@
 name: doc-meter
 description: >
-  Mide el crecimiento de documentación en un repositorio Git.
-  Genera una gráfica de líneas por extensión y/o un CSV con los datos por período.
+  Mide el crecimiento de documentación en un repositorio Git
 author: doc-meter contributors
 
 branding:
