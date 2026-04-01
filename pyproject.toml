@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=68", "setuptools-scm>=8", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "doc-meter"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Mide el crecimiento de documentación en un repositorio Git"
 readme = "README.md"
 license = { text = "MIT" }
@@ -38,3 +38,7 @@ doc-meter = "doc_meter:main"
 
 [tool.setuptools]
 py-modules = ["doc_meter"]
+
+[tool.setuptools_scm]
+# Escribe la versión en _version.py al hacer build
+write_to = "_version.py"
