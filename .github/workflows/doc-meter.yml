@@ -34,7 +34,7 @@ jobs:
         uses: ./
         with:
           repo: .
-          interval: month
+          interval: day
           output: _site/docs_growth.png
           output-csv: _site/docs_growth.csv
           # begin: '2024-01-01'   # descomentar para limitar el período analizado
