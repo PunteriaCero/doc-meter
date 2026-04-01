@@ -75,6 +75,48 @@ CSV (con `--output-csv`): una fila por período con las columnas `date`, `total_
 
 ![Ejemplo de gráfica de crecimiento de documentación](reclamos_backend_docs.png)
 
+## Uso como GitHub Action
+
+Publica el repositorio en GitHub y referencia la acción en cualquier workflow:
+
+```yaml
+steps:
+  - name: Checkout (full history)
+    uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
+
+  - name: Medir crecimiento de documentación
+    uses: {owner}/doc-meter@v1
+    with:
+      repo: .                     # directorio del repo (default: .)
+      interval: month             # day | week | month
+      output: docs_growth.png     # si se omite, no se genera gráfica
+      output-csv: docs_growth.csv
+      begin: '2024-01-01'         # opcional
+      # end: '2024-12-31'         # opcional, default: hoy
+      # branch: main              # opcional
+      # no-comments: 'true'       # opcional
+```
+
+> `fetch-depth: 0` es obligatorio: sin él `git log` solo ve el commit más reciente.
+
+### Inputs
+
+| Input | Descripción | Default |
+|---|---|---|
+| `repo` | Ruta al repositorio a analizar | `.` |
+| `interval` | Agrupación temporal: `day`, `week`, `month` | `week` |
+| `branch` | Branch a analizar | branch actual |
+| `output` | Ruta de la gráfica PNG | — (sin gráfica) |
+| `output-csv` | Ruta del CSV de datos | — |
+| `begin` | Fecha de inicio (`YYYY-MM-DD`) | hace un año |
+| `end` | Fecha de fin (`YYYY-MM-DD`) | hoy |
+| `no-comments` | `'true'` para omitir análisis de comentarios | `'false'` |
+| `python-version` | Versión de Python a usar | `3.12` |
+
+---
+
 ## CI / GitHub Pages
 
 El repositorio incluye un workflow de GitHub Actions (`.github/workflows/doc-meter.yml`) que se ejecuta automáticamente en cada push a `main`:

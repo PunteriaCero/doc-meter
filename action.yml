@@ -1,0 +1,71 @@
+name: doc-meter
+description: >
+  Mide el crecimiento de documentación en un repositorio Git.
+  Genera una gráfica de líneas por extensión y/o un CSV con los datos por período.
+author: doc-meter contributors
+
+branding:
+  icon: bar-chart-2
+  color: blue
+
+inputs:
+  repo:
+    description: Ruta al repositorio a analizar
+    required: false
+    default: '.'
+  interval:
+    description: 'Intervalo de agrupación temporal: day, week, month'
+    required: false
+    default: week
+  branch:
+    description: Branch a analizar (por defecto el branch actual)
+    required: false
+    default: ''
+  output:
+    description: Ruta donde guardar la gráfica PNG (si se omite, no se genera gráfica)
+    required: false
+    default: ''
+  output-csv:
+    description: Ruta para exportar los datos como CSV
+    required: false
+    default: ''
+  begin:
+    description: 'Fecha de inicio del análisis, formato YYYY-MM-DD (default: hace un año)'
+    required: false
+    default: ''
+  end:
+    description: 'Fecha de fin del análisis, formato YYYY-MM-DD (default: hoy)'
+    required: false
+    default: ''
+  no-comments:
+    description: Si "true", omite el análisis de comentarios en código fuente
+    required: false
+    default: 'false'
+  python-version:
+    description: Versión de Python a usar
+    required: false
+    default: '3.12'
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install dependencies
+      shell: bash
+      run: pip install --quiet matplotlib tqdm
+
+    - name: Run doc-meter
+      shell: bash
+      run: |
+        ARGS=("${{ inputs.repo }}" --interval "${{ inputs.interval }}")
+        [ -n "${{ inputs.branch }}"     ] && ARGS+=(--branch     "${{ inputs.branch }}")
+        [ -n "${{ inputs.output }}"     ] && ARGS+=(--output     "${{ inputs.output }}")
+        [ -n "${{ inputs.output-csv }}" ] && ARGS+=(--output-csv "${{ inputs.output-csv }}")
+        [ -n "${{ inputs.begin }}"      ] && ARGS+=(--begin      "${{ inputs.begin }}")
+        [ -n "${{ inputs.end }}"        ] && ARGS+=(--end        "${{ inputs.end }}")
+        [[ "${{ inputs.no-comments }}" == "true" ]] && ARGS+=(--no-comments)
+        python "${{ github.action_path }}/doc_meter.py" "${ARGS[@]}"

@@ -27,23 +27,17 @@ jobs:
         with:
           fetch-depth: 0   # necesario para que git log recorra todo el historial
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Prepare output dir
+        run: mkdir -p _site
 
       - name: Run doc-meter
-        run: |
-          mkdir -p _site
-          python doc_meter.py . \
-            --interval month \
-            --output _site/docs_growth.png \
-            --output-csv _site/docs_growth.csv
-          # Añadir --begin YYYY-MM-DD si se quiere restringir el período analizado
+        uses: ./
+        with:
+          repo: .
+          interval: month
+          output: _site/docs_growth.png
+          output-csv: _site/docs_growth.csv
+          # begin: '2024-01-01'   # descomentar para limitar el período analizado
 
       - name: Generate index.html
         run: |
